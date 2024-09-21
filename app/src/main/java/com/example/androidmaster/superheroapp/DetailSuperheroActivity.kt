@@ -56,6 +56,8 @@ class DetailSuperheroActivity : AppCompatActivity() {
         Picasso.get().load(superhero.image.url).into(binding.ivSuperhero)
         binding.tvSuperheroName.text = superhero.name
         prepareStats(superhero.powerstats)
+        binding.tvSuperheroRealName.text = superhero.biography.fullName
+        binding.tvPublisher.text = superhero.biography.publisher
     }
 
     private fun prepareStats(powerstats: PowerStatsResponse) {
