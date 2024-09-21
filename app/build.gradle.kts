@@ -52,6 +52,8 @@ dependencies {
 
     implementation("com.squareup.picasso:picasso:2.8")
 
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

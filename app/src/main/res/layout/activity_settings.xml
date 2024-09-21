@@ -112,7 +112,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/black"
-                android:text="Activar bluetooth"></TextView>
+                android:text="Subir el volumen"></TextView>
 
             <com.google.android.material.slider.RangeSlider
                 android:layout_width="match_parent"
@@ -120,6 +120,7 @@
                 android:valueFrom="0"
                 android:valueTo="100"
                 android:stepSize="1"
+                android:id="@+id/rsVolume"
                 ></com.google.android.material.slider.RangeSlider>
         </LinearLayout>
 
