@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -16,6 +17,9 @@ import com.example.androidmaster.R
 import com.example.androidmaster.databinding.ActivitySettingsBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 //el by es un "delegado" en android, o sea, permite generar 1 sola instancia para
@@ -28,11 +32,12 @@ class SettingsActivity : AppCompatActivity() {
     companion object {
         const val VOLUME_LVL = "volume"
         const val KEY_BLUETOOTH = "key_bluetooth"
-        const val KEY_VIBRATION= "key_vibration"
+        const val KEY_VIBRATION = "key_vibration"
         const val KEY_DARK_MODE = "key_dark_mode"
     }
 
     private lateinit var binding: ActivitySettingsBinding
+    private var firstTime = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +50,25 @@ class SettingsActivity : AppCompatActivity() {
         }
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            getSettings().filter { firstTime }.collect { settingsModel ->
+                if (settingsModel != null) {
+                    runOnUiThread {
+                        binding.switchVibration.isChecked = settingsModel.vibration
+                        binding.switchDarkMode.isChecked = settingsModel.darkMode
+                        binding.switchBluetooth.isChecked = settingsModel.bluetooth
+                        binding.rsVolume.setValues(settingsModel.volume.toFloat())
+                        firstTime = !firstTime
+                    }
+                }
+            }
+        }
         initUI()
     }
 
     private fun initUI() {
-        binding.rsVolume.addOnChangeListener{_, value, _ ->
+        binding.rsVolume.addOnChangeListener { _, value, _ ->
             CoroutineScope(Dispatchers.IO).launch {
                 saveVolume(value.toInt())
             }
@@ -74,15 +93,29 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun saveVolume(value:Int) {
+    private suspend fun saveVolume(value: Int) {
         dataStore.edit { preferences ->
             preferences[intPreferencesKey(VOLUME_LVL)] = value
         }
     }
 
-    private suspend fun saveOptions(key:String, value:Boolean) {
+    private suspend fun saveOptions(key: String, value: Boolean) {
         dataStore.edit { preferences ->
             preferences[booleanPreferencesKey(key)] = value
+        }
+    }
+
+    private fun getSettings(): Flow<SettingsModel> {
+        //flow: canal abierto que ofrece datos que vos pidas
+        //y en cada cambio de la bd, el flow te tira
+        //compactás todos los resultados en el .map
+        return dataStore.data.map { preferences ->
+            SettingsModel(
+                volume = preferences[intPreferencesKey(VOLUME_LVL)] ?: 50,
+                bluetooth = preferences[booleanPreferencesKey(KEY_BLUETOOTH)] ?: true,
+                darkMode = preferences[booleanPreferencesKey(KEY_DARK_MODE)] ?: false,
+                vibration = preferences[booleanPreferencesKey(KEY_VIBRATION)] ?: true
+            )
         }
     }
 }
