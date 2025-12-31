@@ -2,12 +2,13 @@ package com.example.androidmaster.settings
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -51,9 +52,12 @@ class SettingsActivity : AppCompatActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        Log.i("fabiodev", binding.switchDarkMode.toString())
+
+
         CoroutineScope(Dispatchers.IO).launch {
             getSettings().filter { firstTime }.collect { settingsModel ->
-                if (settingsModel != null) {
+                if (settingsModel !== null) {
                     runOnUiThread {
                         binding.switchVibration.isChecked = settingsModel.vibration
                         binding.switchDarkMode.isChecked = settingsModel.darkMode
@@ -81,6 +85,11 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.switchDarkMode.setOnCheckedChangeListener { _, value ->
+            if(value){
+                enableDarkMode()
+            } else {
+                disableDarkMode()
+            }
             CoroutineScope(Dispatchers.IO).launch {
                 saveOptions(KEY_DARK_MODE, value)
             }
@@ -117,5 +126,15 @@ class SettingsActivity : AppCompatActivity() {
                 vibration = preferences[booleanPreferencesKey(KEY_VIBRATION)] ?: true
             )
         }
+    }
+
+    private fun enableDarkMode () {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        delegate.applyDayNight()
+    }
+
+    private fun disableDarkMode() {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        delegate.applyDayNight()
     }
 }
